@@ -3,8 +3,13 @@
   "buildCommand": "cd client && CI=false npm run build",
   "outputDirectory": "client/dist",
   "installCommand": "cd client && npm install",
+  "framework": "vite",
   "functions": {},
   "regions": ["all"],
+  "env": {
+    "VITE_API_BASE_URL": "https://bug-tracker-backend-na6z.onrender.com",
+    "VITE_NODE_ENV": "production"
+  },
   "routes": [
     {
       "handle": "filesystem"

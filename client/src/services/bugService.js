@@ -1,20 +1,15 @@
 // bugService.js - API service functions for bug operations
 
-// Support both Vite (import.meta.env) and Create React App (process.env) for compatibility
+// Get API base URL from Vite environment variables
+// Note: VITE_API_BASE_URL should not include /api suffix - we append it here
 const getApiBaseUrl = () => {
-  // Vite environment variable (preferred for Vite projects)
+  // Vite environment variable (primary)
   if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    // Ensure we have /api suffix
+    return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
   }
-  // Create React App environment variable (for CRA projects)
-  // Check both REACT_APP_API_BASE_URL and REACT_APP_API_URL for compatibility
-  if (process.env.REACT_APP_API_BASE_URL) {
-    return process.env.REACT_APP_API_BASE_URL;
-  }
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
-  }
-  // Default fallback for development
+  // Fallback for development if env var not set
   return 'http://localhost:5000/api';
 };
 

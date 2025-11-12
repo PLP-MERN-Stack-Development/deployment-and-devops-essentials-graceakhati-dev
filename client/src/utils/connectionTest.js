@@ -3,19 +3,16 @@
 
 /**
  * Get the current API base URL being used
- * @returns {string} The API base URL
+ * @returns {string} The API base URL (with /api suffix)
  */
 export const getApiBaseUrl = () => {
-  // Support both Vite and Create React App
+  // Vite environment variable (primary)
   if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    // Ensure we have /api suffix
+    return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
   }
-  if (process.env.REACT_APP_API_BASE_URL) {
-    return process.env.REACT_APP_API_BASE_URL;
-  }
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
-  }
+  // Fallback for development if env var not set
   return 'http://localhost:5000/api';
 };
 

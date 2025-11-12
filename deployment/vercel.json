@@ -16,8 +16,9 @@
     }
   ],
   "env": {
-    "REACT_APP_API_URL": "@react_app_api_url",
-    "VITE_API_BASE_URL": "@vite_api_base_url"
+    "REACT_APP_API_BASE_URL": "https://bug-tracker-backend-na6z.onrender.com/api",
+    "REACT_APP_API_URL": "https://bug-tracker-backend-na6z.onrender.com/api",
+    "VITE_API_BASE_URL": "https://bug-tracker-backend-na6z.onrender.com/api"
   }
 }
 

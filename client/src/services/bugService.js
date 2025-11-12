@@ -2,11 +2,15 @@
 
 // Support both Vite (import.meta.env) and Create React App (process.env) for compatibility
 const getApiBaseUrl = () => {
-  // Vite environment variable (preferred)
+  // Vite environment variable (preferred for Vite projects)
   if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
-  // Create React App environment variable (fallback)
+  // Create React App environment variable (for CRA projects)
+  // Check both REACT_APP_API_BASE_URL and REACT_APP_API_URL for compatibility
+  if (process.env.REACT_APP_API_BASE_URL) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }

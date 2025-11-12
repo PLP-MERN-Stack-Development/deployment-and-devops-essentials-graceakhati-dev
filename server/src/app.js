@@ -37,12 +37,26 @@ const corsOptions = {
     // In production, only allow specific frontend URL
     const allowedOrigins = [
       process.env.FRONTEND_URL,
+      // Vercel deployment URLs (wildcard pattern)
+      /^https:\/\/.*\.vercel\.app$/,
       // Fallback for localhost in case FRONTEND_URL is not set
       'http://localhost:3000',
       'http://localhost:3001'
     ].filter(Boolean); // Remove undefined values
     
-    if (allowedOrigins.length === 0 || allowedOrigins.indexOf(origin) !== -1) {
+    // Check if origin matches any allowed origin (including regex patterns)
+    const isAllowed = allowedOrigins.length === 0 || 
+      allowedOrigins.some(allowed => {
+        if (typeof allowed === 'string') {
+          return allowed === origin;
+        }
+        if (allowed instanceof RegExp) {
+          return allowed.test(origin);
+        }
+        return false;
+      });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
       callback(new Error(`Not allowed by CORS. Origin: ${origin}`));

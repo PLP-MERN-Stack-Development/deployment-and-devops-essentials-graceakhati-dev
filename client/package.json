@@ -7,10 +7,11 @@
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
-    "vercel-build": "vite build && echo 'Build completed - dist folder should exist'",
+    "vercel-build": "vite build",
     "preview": "vite preview",
     "test": "vitest --run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postinstall": "node -e \"console.log('Dependencies installed. Vite available:', require('fs').existsSync('node_modules/vite'))\""
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -22,11 +23,9 @@
     "@vitejs/plugin-react": "^4.2.1",
     "vite": "^5.0.8",
     "vitest": "^1.0.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }
-
-
-
-
-
-

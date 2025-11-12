@@ -7,7 +7,12 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      // Enable JSX in .js files (for compatibility)
+      include: '**/*.{jsx,js}',
+    }),
+  ],
   
   // Base path for production (empty for root)
   base: '/',

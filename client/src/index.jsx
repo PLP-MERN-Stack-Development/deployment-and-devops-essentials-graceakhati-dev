@@ -1,4 +1,4 @@
-// index.js - Application entry point
+// index.jsx - Application entry point
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -10,9 +10,4 @@ root.render(
     <App />
   </React.StrictMode>
 );
-
-
-
-
-
 

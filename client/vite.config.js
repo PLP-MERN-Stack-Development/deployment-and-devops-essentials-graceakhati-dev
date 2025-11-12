@@ -9,6 +9,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   plugins: [react()],
   
+  // Base path for production (empty for root)
+  base: '/',
+  
   // Build configuration
   build: {
     // Output directory (Vite default is 'dist')
@@ -22,6 +25,13 @@ export default defineConfig({
     
     // Chunk size warning limit (in kbs)
     chunkSizeWarningLimit: 1000,
+    
+    // Ensure index.html is in the root of dist
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+      },
+    },
   },
   
   // Server configuration (for development)

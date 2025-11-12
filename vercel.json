@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd client && CI=false npm run build",
+  "buildCommand": "cd client && npm run build",
   "outputDirectory": "client/dist",
   "installCommand": "cd client && npm install",
   "framework": "vite",
@@ -15,8 +15,13 @@
       "handle": "filesystem"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/index.html",
+      "status": 200
     }
   ]
 }

@@ -1,77 +1,168 @@
-# Deployment and DevOps for MERN Applications
+## 📋 Project Overview
+A full-stack bug tracking application demonstrating modern DevOps practices, CI/CD pipelines, and cloud deployment.
 
-This assignment focuses on deploying a full MERN stack application to production, implementing CI/CD pipelines, and setting up monitoring for your application.
+## 🚀 Live Deployment
+- **Frontend**: [Vercel Deployment Link] (To be added after frontend deployment)
+- **Backend API**: [Render Deployment Link] (To be added after backend deployment)
+- **API Health Check**: `/api/health` endpoint available
 
-## Assignment Overview
+## 🛠️ Technology Stack
+### Frontend
+- React.js 18 with Functional Components & Hooks
+- Context API for State Management
+- Axios for HTTP Requests
+- CSS3 with Responsive Design
+- Testing: Jest & React Testing Library
 
-You will:
-1. Prepare your MERN application for production deployment
-2. Deploy the backend to a cloud platform
-3. Deploy the frontend to a static hosting service
-4. Set up CI/CD pipelines with GitHub Actions
-5. Implement monitoring and maintenance strategies
+### Backend
+- Node.js & Express.js
+- MongoDB Atlas (Cloud Database)
+- Mongoose ODM
+- CORS & Helmet for Security
+- Environment-based Configuration
 
-## Getting Started
+### DevOps & Deployment
+- **Version Control**: Git & GitHub
+- **Frontend Hosting**: Vercel
+- **Backend Hosting**: Render
+- **Database**: MongoDB Atlas
+- **Environment Management**: .env files with .gitignore protection
 
-1. Accept the GitHub Classroom assignment invitation
-2. Clone your personal repository that was created by GitHub Classroom
-3. Follow the setup instructions in the `Week7-Assignment.md` file
-4. Use the provided templates and configuration files as a starting point
+## 📁 Project Structure
+deployment-and-devops-essentials-graceakhati-dev/
+├── client/ # React Frontend
+│ ├── src/
+│ │ ├── components/ # React components
+│ │ ├── context/ # State management
+│ │ ├── services/ # API services
+│ │ └── tests/ # Test files
+│ ├── package.json
+│ └── vercel.json # Vercel configuration
+├── server/ # Express Backend
+│ ├── routes/ # API routes
+│ ├── models/ # MongoDB models
+│ ├── package.json
+│ └── server.js
+├── .gitignore
+└── README.md
 
-## Files Included
+text
 
-- `Week7-Assignment.md`: Detailed assignment instructions
-- `.github/workflows/`: GitHub Actions workflow templates
-- `deployment/`: Deployment configuration files and scripts
-- `.env.example`: Example environment variable templates
-- `monitoring/`: Monitoring configuration examples
+## 🔧 Setup & Installation
 
-## Requirements
+### Prerequisites
+- Node.js (v18 or higher)
+- MongoDB Atlas account
+- Git
 
-- A completed MERN stack application from previous weeks
-- Accounts on the following services:
-  - GitHub
-  - MongoDB Atlas
-  - Render, Railway, or Heroku (for backend)
-  - Vercel, Netlify, or GitHub Pages (for frontend)
-- Basic understanding of CI/CD concepts
+### Local Development
+1. **Clone Repository**
+   \`\`\`bash
+   git clone <repository-url>
+   cd deployment-and-devops-essentials-graceakhati-dev
+   \`\`\`
 
-## Deployment Platforms
+2. **Backend Setup**
+   \`\`\`bash
+   cd server
+   npm install
+   cp .env.example .env
+   # Update .env with your MongoDB Atlas credentials
+   npm run dev
+   \`\`\`
 
-### Backend Deployment Options
-- **Render**: Easy to use, free tier available
-- **Railway**: Developer-friendly, generous free tier
-- **Heroku**: Well-established, extensive documentation
+3. **Frontend Setup**
+   \`\`\`bash
+   cd client
+   npm install
+   npm start
+   \`\`\`
 
-### Frontend Deployment Options
-- **Vercel**: Optimized for React apps, easy integration
-- **Netlify**: Great for static sites, good CI/CD
-- **GitHub Pages**: Free, integrated with GitHub
+## 🚀 Deployment Process
 
-## CI/CD Pipeline
+### Backend Deployment (Render)
+1. **Environment Preparation**
+   - Created production-ready \`package.json\` with proper scripts
+   - Configured CORS for frontend communication
+   - Added security headers with Helmet
+   - Implemented rate limiting
+   - Created health check endpoint (\`/api/health\`)
 
-The assignment includes templates for setting up GitHub Actions workflows:
-- `frontend-ci.yml`: Tests and builds the React application
-- `backend-ci.yml`: Tests the Express.js backend
-- `frontend-cd.yml`: Deploys the frontend to your chosen platform
-- `backend-cd.yml`: Deploys the backend to your chosen platform
+2. **MongoDB Atlas Configuration**
+   - Created free-tier MongoDB Atlas cluster
+   - Configured database user with read/write permissions
+   - Set up IP whitelisting (0.0.0.0/0 for Render)
+   - Tested connection locally
 
-## Submission
+3. **Render Deployment**
+   - Connected GitHub repository to Render
+   - Set root directory to \`server\`
+   - Configured environment variables
+   - Automated deployments from main branch
 
-Your work will be automatically submitted when you push to your GitHub Classroom repository. Make sure to:
+### Frontend Deployment (Vercel)
+1. **Build Optimization**
+   - Verified build scripts in \`package.json\`
+   - Configured environment variables for production API URL
 
-1. Complete all deployment tasks
-2. Set up CI/CD pipelines with GitHub Actions
-3. Deploy both frontend and backend to production
-4. Document your deployment process in the README.md
-5. Include screenshots of your CI/CD pipeline in action
-6. Add URLs to your deployed applications
+2. **Vercel Configuration**
+   - Connected GitHub repository
+   - Set root directory to \`client\`
+   - Automated deployments on push to main
 
-## Resources
+## 🔒 Environment Variables
 
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [MongoDB Atlas Documentation](https://docs.atlas.mongodb.com/)
-- [Render Documentation](https://render.com/docs)
-- [Railway Documentation](https://docs.railway.app/)
-- [Vercel Documentation](https://vercel.com/docs)
-- [Netlify Documentation](https://docs.netlify.com/) 
+### Backend (.env)
+\`\`\`env
+NODE_ENV=production
+PORT=10000
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/bugtracker
+JWT_SECRET=your_secure_secret
+FRONTEND_URL=https://your-frontend.vercel.app
+\`\`\`
+
+### Frontend
+- \`REACT_APP_API_URL\`: Backend API endpoint
+
+## ✅ Testing
+\`\`\`bash
+# Backend Tests
+cd server
+npm test
+
+# Frontend Tests
+cd client
+npm test
+\`\`\`
+
+## 🔄 CI/CD Pipeline
+- **Automated Testing**: Runs on both frontend and backend
+- **Automated Deployment**: Vercel & Render deploy on git push
+- **Environment Separation**: Development vs Production configurations
+- **Health Monitoring**: API health checks implemented
+
+## 📈 Monitoring & Logs
+- **Backend**: Render provides built-in logging and monitoring
+- **Database**: MongoDB Atlas performance metrics
+- **Frontend**: Vercel analytics and performance monitoring
+
+## 🐛 Troubleshooting
+
+### Common Issues
+1. **MongoDB Connection Failed**
+   - Verify Atlas IP whitelist includes 0.0.0.0/0
+   - Check database user credentials
+   - Confirm cluster is running
+
+2. **CORS Errors**
+   - Verify FRONTEND_URL in backend environment variables
+   - Check CORS configuration in server.js
+
+3. **Environment Variables**
+   - Ensure all required variables are set in deployment platforms
+   - Verify .env files are not committed to git
+
+## 👤 Author
+**Grace Akhati**  
+-PLP JULY 2025 COHORT
+

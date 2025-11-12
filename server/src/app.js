@@ -2,6 +2,7 @@
 
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const bugRoutes = require('./routes/bugRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
@@ -9,8 +10,20 @@ const asyncHandler = require('./middleware/asyncHandler');
 
 const app = express();
 
+// Security headers with Helmet
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Allow cross-origin resources
+}));
+
 // CORS middleware - Allow requests from React frontend
-// In development, allow all origins for easier debugging
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -23,61 +36,66 @@ const corsOptions = {
     
     // In production, only allow specific frontend URL
     const allowedOrigins = [
-      process.env.FRONTEND_URL || 'http://localhost:3001',
+      process.env.FRONTEND_URL,
+      // Fallback for localhost in case FRONTEND_URL is not set
       'http://localhost:3000',
       'http://localhost:3001'
-    ];
+    ].filter(Boolean); // Remove undefined values
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.length === 0 || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  exposedHeaders: ['Content-Length'],
   optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
 app.use(cors(corsOptions));
 
 // Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// DEBUG: Request logging middleware
-app.use((req, res, next) => {
-  console.log('=== DEBUG: Incoming Request ===');
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Path:', req.path);
-  console.log('Original URL:', req.originalUrl);
-  console.log('Params:', req.params);
-  console.log('Query:', req.query);
-  console.log('==============================');
-  next();
-});
-
-// DEBUG: Log route mounting
-console.log('=== DEBUG: App Route Mounting ===');
-console.log('Mounting bugRoutes at /api/bugs');
-console.log('=================================');
+// Request logging middleware (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log('=== DEBUG: Incoming Request ===');
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
+    console.log('Path:', req.path);
+    console.log('Original URL:', req.originalUrl);
+    console.log('Params:', req.params);
+    console.log('Query:', req.query);
+    console.log('==============================');
+    next();
+  });
+  
+  // DEBUG: Log route mounting
+  console.log('=== DEBUG: App Route Mounting ===');
+  console.log('Mounting bugRoutes at /api/bugs');
+  console.log('=================================');
+}
 
 // Routes
 app.use('/api/bugs', bugRoutes);
 
-// DEBUG: Log all registered routes
-console.log('=== DEBUG: All Registered Routes ===');
-app._router.stack.forEach((middleware) => {
-  if (middleware.route) {
-    console.log(`${Object.keys(middleware.route.methods).join(', ').toUpperCase()} ${middleware.route.path}`);
-  } else if (middleware.name === 'router') {
-    console.log('Router mounted at:', middleware.regexp);
-  }
-});
-console.log('===================================');
+// DEBUG: Log all registered routes (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  console.log('=== DEBUG: All Registered Routes ===');
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      console.log(`${Object.keys(middleware.route.methods).join(', ').toUpperCase()} ${middleware.route.path}`);
+    } else if (middleware.name === 'router') {
+      console.log('Router mounted at:', middleware.regexp);
+    }
+  });
+  console.log('===================================');
+}
 
 // Health check route
 app.get('/health', (req, res) => {
@@ -89,14 +107,19 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API health check route
+// API health check route (for monitoring and load balancers)
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
     status: 'ok',
     message: 'API is healthy',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime(),
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
+    }
   });
 });
 

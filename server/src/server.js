@@ -4,6 +4,8 @@ const app = require('./app');
 const connectDB = require('./config/database');
 const errorLogger = require('./utils/errorLogger');
 
+// Render uses dynamic ports - PORT will be provided by Render
+// Default to 5000 for local development
 const PORT = process.env.PORT || 5000;
 
 // Start server and connect to database
@@ -13,10 +15,16 @@ const startServer = async () => {
     await connectDB();
     
     // Start the server
-    const server = app.listen(PORT, () => {
-      console.log(`✅ Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-      console.log(`✅ Health check available at http://localhost:${PORT}/api/health`);
-      console.log(`✅ API endpoints available at http://localhost:${PORT}/api/bugs`);
+    // Listen on 0.0.0.0 to accept connections from Render's load balancer
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      const env = process.env.NODE_ENV || 'development';
+      console.log(`✅ Server running in ${env} mode on port ${PORT}`);
+      console.log(`✅ Health check available at /api/health`);
+      console.log(`✅ API endpoints available at /api/bugs`);
+      
+      if (env === 'production') {
+        console.log(`✅ Server listening on 0.0.0.0:${PORT} (Render compatible)`);
+      }
     });
 
     // Set up error handlers with server reference

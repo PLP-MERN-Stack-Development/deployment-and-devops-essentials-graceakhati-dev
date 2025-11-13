@@ -37,7 +37,9 @@ const corsOptions = {
     // In production, only allow specific frontend URL
     const allowedOrigins = [
       process.env.FRONTEND_URL,
-      // Vercel deployment URLs (wildcard pattern)
+      // Explicit Vercel frontend domain
+      'https://bug-tracker-frontend-hazel-three.vercel.app',
+      // Vercel deployment URLs (wildcard pattern for other Vercel deployments)
       /^https:\/\/.*\.vercel\.app$/,
       // Fallback for localhost in case FRONTEND_URL is not set
       'http://localhost:3000',

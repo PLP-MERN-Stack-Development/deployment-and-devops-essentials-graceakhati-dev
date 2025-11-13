@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "postinstall": "node -e \"console.log('Dependencies installed. Vite available:', require('fs').existsSync('node_modules/vite'))\""
+    "postinstall": "echo 'Dependencies installed successfully'"
   },
   "dependencies": {
     "react": "^18.2.0",

@@ -3,23 +3,33 @@
 // Get API base URL from Vite environment variables
 // Note: VITE_API_BASE_URL should not include /api suffix - we append it here
 const getApiBaseUrl = () => {
-  // Vite environment variable (primary)
+  // Check if we're running on localhost (development)
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || 
+     window.location.hostname === '127.0.0.1' ||
+     window.location.hostname === '');
+
+  // Vite environment variable (primary) - checked first
   if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
     const baseUrl = import.meta.env.VITE_API_BASE_URL;
     // Ensure we have /api suffix
-    return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+    const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+    console.log('[bugService] Using VITE_API_BASE_URL:', apiUrl);
+    return apiUrl;
   }
-  // Fallback based on environment
-  // In production (Vercel), use Render backend
-  // In development, use localhost
-  if (import.meta.env?.MODE === 'production' || import.meta.env?.PROD) {
-    return 'https://bug-tracker-backend-na6z.onrender.com/api';
+
+  // If on localhost, use local backend
+  if (isLocalhost) {
+    console.log('[bugService] Running on localhost, using local backend');
+    return 'http://localhost:5000/api';
   }
-  // Development fallback
-  return 'http://localhost:5000/api';
+
+  // Default to production backend (for Vercel deployments)
+  console.log('[bugService] Using production backend');
+  return 'https://bug-tracker-backend-na6z.onrender.com/api';
 };
 
-const API_BASE_URL = getApiBaseUrl();
+// Note: We call getApiBaseUrl() at runtime for each API call to ensure correct URL
 
 /**
  * Fetch all bugs from the API
@@ -30,7 +40,8 @@ const API_BASE_URL = getApiBaseUrl();
 const checkBackendHealth = async () => {
   try {
     // Extract base URL without /api suffix for health check
-    const baseUrl = API_BASE_URL.replace('/api', '');
+    const apiBaseUrl = getApiBaseUrl();
+    const baseUrl = apiBaseUrl.replace('/api', '');
     const healthUrl = `${baseUrl}/api/health`;
     
     // Create AbortController for timeout
@@ -78,7 +89,8 @@ export const getBugs = async (filters = {}) => {
     if (filters.priority) queryParams.append('priority', filters.priority);
     if (filters.sort) queryParams.append('sort', filters.sort);
 
-    const url = `${API_BASE_URL}/bugs${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const apiBaseUrl = getApiBaseUrl();
+    const url = `${apiBaseUrl}/bugs${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     
     console.log(`[bugService] Fetching bugs from: ${url}`);
     
@@ -106,7 +118,7 @@ export const getBugs = async (filters = {}) => {
       // Check if backend is reachable
       const isHealthy = await checkBackendHealth();
       if (!isHealthy) {
-        throw new Error(getConnectionErrorMessage(API_BASE_URL));
+        throw new Error(getConnectionErrorMessage(getApiBaseUrl()));
       }
       throw new Error('Network error: Unable to reach the server. Please check your connection.');
     }
@@ -121,7 +133,8 @@ export const getBugs = async (filters = {}) => {
  */
 export const getBug = async (id) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/bugs/${id}`);
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await fetch(`${apiBaseUrl}/bugs/${id}`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch bug: ${response.statusText}`);
@@ -134,7 +147,7 @@ export const getBug = async (id) => {
     if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.name === 'AbortError') {
       const isHealthy = await checkBackendHealth();
       if (!isHealthy) {
-        throw new Error(getConnectionErrorMessage(API_BASE_URL));
+        throw new Error(getConnectionErrorMessage(getApiBaseUrl()));
       }
       throw new Error('Network error: Unable to reach the server. Please check your connection.');
     }
@@ -149,7 +162,8 @@ export const getBug = async (id) => {
  */
 export const createBug = async (bugData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/bugs`, {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await fetch(`${apiBaseUrl}/bugs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -169,7 +183,7 @@ export const createBug = async (bugData) => {
     if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.name === 'AbortError') {
       const isHealthy = await checkBackendHealth();
       if (!isHealthy) {
-        throw new Error(getConnectionErrorMessage(API_BASE_URL));
+        throw new Error(getConnectionErrorMessage(getApiBaseUrl()));
       }
       throw new Error('Network error: Unable to reach the server. Please check your connection.');
     }
@@ -185,7 +199,8 @@ export const createBug = async (bugData) => {
  */
 export const updateBug = async (id, bugData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/bugs/${id}`, {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await fetch(`${apiBaseUrl}/bugs/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -205,7 +220,7 @@ export const updateBug = async (id, bugData) => {
     if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.name === 'AbortError') {
       const isHealthy = await checkBackendHealth();
       if (!isHealthy) {
-        throw new Error(getConnectionErrorMessage(API_BASE_URL));
+        throw new Error(getConnectionErrorMessage(getApiBaseUrl()));
       }
       throw new Error('Network error: Unable to reach the server. Please check your connection.');
     }
@@ -220,7 +235,8 @@ export const updateBug = async (id, bugData) => {
  */
 export const deleteBug = async (id) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/bugs/${id}`, {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await fetch(`${apiBaseUrl}/bugs/${id}`, {
       method: 'DELETE',
     });
 
@@ -235,7 +251,7 @@ export const deleteBug = async (id) => {
     if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.name === 'AbortError') {
       const isHealthy = await checkBackendHealth();
       if (!isHealthy) {
-        throw new Error(getConnectionErrorMessage(API_BASE_URL));
+        throw new Error(getConnectionErrorMessage(getApiBaseUrl()));
       }
       throw new Error('Network error: Unable to reach the server. Please check your connection.');
     }

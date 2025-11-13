@@ -9,7 +9,13 @@ const getApiBaseUrl = () => {
     // Ensure we have /api suffix
     return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
   }
-  // Fallback for development if env var not set
+  // Fallback based on environment
+  // In production (Vercel), use Render backend
+  // In development, use localhost
+  if (import.meta.env?.MODE === 'production' || import.meta.env?.PROD) {
+    return 'https://bug-tracker-backend-na6z.onrender.com/api';
+  }
+  // Development fallback
   return 'http://localhost:5000/api';
 };
 

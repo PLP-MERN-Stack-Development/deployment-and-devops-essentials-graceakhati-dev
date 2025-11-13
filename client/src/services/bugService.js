@@ -1,259 +1,114 @@
-// bugService.js - API service functions for bug operations
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-// Get API base URL - uses environment variable ONLY (no hardcoded URLs)
-const getApiBaseUrl = () => {
-  // Vite environment variable (REQUIRED) - no fallbacks, no hardcoded URLs
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL;
-    // Ensure we have /api suffix
-    const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-    console.log('[bugService] Using VITE_API_BASE_URL:', apiUrl);
-    return apiUrl;
-  }
-
-  // If environment variable is not set, throw an error
-  // This ensures we never silently fall back to wrong URLs
-  const error = new Error(
-    'VITE_API_BASE_URL environment variable is not set. ' +
-    'Please set it in your .env file or Vercel environment variables. ' +
-    'For development: VITE_API_BASE_URL=http://localhost:5000 ' +
-    'For production: VITE_API_BASE_URL=https://bug-tracker-backend-na6z.onrender.com'
-  );
-  console.error('[bugService]', error.message);
-  throw error;
-};
-
-// Note: We call getApiBaseUrl() at runtime for each API call to ensure correct URL
-
-/**
- * Fetch all bugs from the API
- * @param {Object} filters - Optional filters (status, priority, sort)
- * @returns {Promise} Promise that resolves to bugs array
- */
-// Helper function to check backend health
-const checkBackendHealth = async () => {
+// Health check
+export const checkBackendHealth = async () => {
   try {
-    // Extract base URL without /api suffix for health check
-    const apiBaseUrl = getApiBaseUrl();
-    const baseUrl = apiBaseUrl.replace('/api', '');
-    const healthUrl = `${baseUrl}/api/health`;
-    
-    // Create AbortController for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-    
-    const response = await fetch(healthUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      signal: controller.signal,
-    });
-    
-    clearTimeout(timeoutId);
-    return response.ok;
-  } catch (error) {
-    // Timeout or network error - backend is not available
-    if (error.name === 'AbortError') {
-      console.warn('[bugService] Backend health check timed out after 5 seconds');
-    } else {
-      console.warn('[bugService] Backend health check failed:', error.message);
-    }
-    return false;
-  }
-};
-
-// Helper function to get user-friendly error message
-const getConnectionErrorMessage = (apiUrl) => {
-  const baseUrl = apiUrl.replace('/api', '');
-  return `Unable to connect to the backend server at ${baseUrl}. ` +
-    `Please ensure:\n` +
-    `1. The backend server is running\n` +
-    `2. MongoDB is running and accessible\n` +
-    `3. No firewall is blocking the connection\n` +
-    `4. Check the backend console for any errors\n` +
-    `5. Verify the API URL in your .env file: ${apiUrl}`;
-};
-
-export const getBugs = async (filters = {}) => {
-  try {
-    const queryParams = new URLSearchParams();
-    
-    if (filters.status) queryParams.append('status', filters.status);
-    if (filters.priority) queryParams.append('priority', filters.priority);
-    if (filters.sort) queryParams.append('sort', filters.sort);
-
-    const apiBaseUrl = getApiBaseUrl();
-    const url = `${apiBaseUrl}/bugs${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    
-    console.log(`[bugService] Fetching bugs from: ${url}`);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
+    console.log(`[bugService] Checking backend health at: ${API_BASE}/api/health`);
+    const response = await fetch(`${API_BASE}/api/health`);
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[bugService] Response error: ${response.status} ${response.statusText}`, errorText);
-      throw new Error(`Failed to fetch bugs: ${response.status} ${response.statusText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     const data = await response.json();
-    console.log(`[bugService] Successfully fetched ${data.count || data.length || 0} bugs`);
-    return data.data || data;
+    console.log('[bugService] Backend health check successful:', data);
+    return data;
+  } catch (error) {
+    console.error('[bugService] Backend health check failed:', error);
+    throw new Error(`Unable to connect to the backend server at ${API_BASE}. Please ensure:
+1. The backend server is running
+2. MongoDB is running and accessible
+3. No firewall is blocking the connection
+4. Check the backend console for any errors
+5. Verify the API URL in your .env file: ${API_BASE}/api`);
+  }
+};
+
+// Get all bugs - renamed to match what BugContext expects
+export const getBugs = async () => {
+  try {
+    console.log(`[bugService] Fetching bugs from: ${API_BASE}/api/bugs`);
+    const response = await fetch(`${API_BASE}/api/bugs`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('[bugService] Bugs fetched successfully');
+    return data;
   } catch (error) {
     console.error('[bugService] Error fetching bugs:', error);
-    
-    // Provide user-friendly error message for connection issues
-    if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.name === 'AbortError') {
-      // Check if backend is reachable
-      const isHealthy = await checkBackendHealth();
-      if (!isHealthy) {
-        throw new Error(getConnectionErrorMessage(getApiBaseUrl()));
-      }
-      throw new Error('Network error: Unable to reach the server. Please check your connection.');
-    }
     throw error;
   }
 };
 
-/**
- * Fetch a single bug by ID
- * @param {string} id - Bug ID
- * @returns {Promise} Promise that resolves to bug object
- */
-export const getBug = async (id) => {
+// Get bug by ID
+export const getBugById = async (id) => {
   try {
-    const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/bugs/${id}`);
-
+    const response = await fetch(`${API_BASE}/api/bugs/${id}`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch bug: ${response.statusText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    const data = await response.json();
-    return data.data || data;
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching bug:', error);
-    if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.name === 'AbortError') {
-      const isHealthy = await checkBackendHealth();
-      if (!isHealthy) {
-        throw new Error(getConnectionErrorMessage(getApiBaseUrl()));
-      }
-      throw new Error('Network error: Unable to reach the server. Please check your connection.');
-    }
+    console.error(`[bugService] Error fetching bug ${id}:`, error);
     throw error;
   }
 };
 
-/**
- * Create a new bug
- * @param {Object} bugData - Bug data (title, description, status, priority, reporter)
- * @returns {Promise} Promise that resolves to created bug object
- */
+// Create new bug - renamed to match what BugContext expects
 export const createBug = async (bugData) => {
   try {
-    const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/bugs`, {
+    const response = await fetch(`${API_BASE}/api/bugs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(bugData),
     });
-
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Failed to create bug: ${response.statusText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    const data = await response.json();
-    return data.data || data;
+    return await response.json();
   } catch (error) {
-    console.error('Error creating bug:', error);
-    if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.name === 'AbortError') {
-      const isHealthy = await checkBackendHealth();
-      if (!isHealthy) {
-        throw new Error(getConnectionErrorMessage(getApiBaseUrl()));
-      }
-      throw new Error('Network error: Unable to reach the server. Please check your connection.');
-    }
+    console.error('[bugService] Error creating bug:', error);
     throw error;
   }
 };
 
-/**
- * Update an existing bug
- * @param {string} id - Bug ID
- * @param {Object} bugData - Updated bug data
- * @returns {Promise} Promise that resolves to updated bug object
- */
+// Update bug - renamed to match what BugContext expects
 export const updateBug = async (id, bugData) => {
   try {
-    const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/bugs/${id}`, {
+    const response = await fetch(`${API_BASE}/api/bugs/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(bugData),
     });
-
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Failed to update bug: ${response.statusText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    const data = await response.json();
-    return data.data || data;
+    return await response.json();
   } catch (error) {
-    console.error('Error updating bug:', error);
-    if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.name === 'AbortError') {
-      const isHealthy = await checkBackendHealth();
-      if (!isHealthy) {
-        throw new Error(getConnectionErrorMessage(getApiBaseUrl()));
-      }
-      throw new Error('Network error: Unable to reach the server. Please check your connection.');
-    }
+    console.error(`[bugService] Error updating bug ${id}:`, error);
     throw error;
   }
 };
 
-/**
- * Delete a bug
- * @param {string} id - Bug ID
- * @returns {Promise} Promise that resolves when bug is deleted
- */
+// Delete bug - renamed to match what BugContext expects
 export const deleteBug = async (id) => {
   try {
-    const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/bugs/${id}`, {
+    const response = await fetch(`${API_BASE}/api/bugs/${id}`, {
       method: 'DELETE',
     });
-
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Failed to delete bug: ${response.statusText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    return true;
+    return await response.json();
   } catch (error) {
-    console.error('Error deleting bug:', error);
-    if (error.message === 'Failed to fetch' || error.name === 'TypeError' || error.name === 'AbortError') {
-      const isHealthy = await checkBackendHealth();
-      if (!isHealthy) {
-        throw new Error(getConnectionErrorMessage(getApiBaseUrl()));
-      }
-      throw new Error('Network error: Unable to reach the server. Please check your connection.');
-    }
+    console.error(`[bugService] Error deleting bug ${id}:`, error);
     throw error;
   }
 };
 
-
-
-
-
+// Export fetchBugs as alias for getBugs for compatibility
+export const fetchBugs = getBugs;
+export const fetchBugById = getBugById;

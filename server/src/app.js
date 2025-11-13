@@ -27,10 +27,11 @@ app.use(helmet({
 const corsOptions = {
   origin: [
     'https://bug-tracker-frontend-hazel-three.vercel.app',
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'http://localhost:5173' // Vite default port
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Content-Length'],
   optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204

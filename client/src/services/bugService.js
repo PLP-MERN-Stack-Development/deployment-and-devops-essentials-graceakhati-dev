@@ -3,7 +3,18 @@
 // Get API base URL from Vite environment variables
 // Note: VITE_API_BASE_URL should not include /api suffix - we append it here
 const getApiBaseUrl = () => {
-  // Vite environment variable (REQUIRED) - always use this
+  // Check if we're running on Vercel (production)
+  const isVercel = typeof window !== 'undefined' && 
+    (window.location.hostname.includes('vercel.app') || 
+     window.location.hostname.includes('vercel.com'));
+
+  // Check if we're running on localhost (development)
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || 
+     window.location.hostname === '127.0.0.1' ||
+     window.location.hostname === '');
+
+  // Vite environment variable (primary) - checked first
   if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
     const baseUrl = import.meta.env.VITE_API_BASE_URL;
     // Ensure we have /api suffix
@@ -12,9 +23,20 @@ const getApiBaseUrl = () => {
     return apiUrl;
   }
 
-  // Fallback: If environment variable is not set, use production backend
-  // This ensures production deployments always work even if env var is missing
-  console.warn('[bugService] VITE_API_BASE_URL not set, using production backend');
+  // If on Vercel, always use production backend
+  if (isVercel) {
+    console.log('[bugService] Detected Vercel deployment, using production backend');
+    return 'https://bug-tracker-backend-na6z.onrender.com/api';
+  }
+
+  // If on localhost, use local backend
+  if (isLocalhost) {
+    console.log('[bugService] Running on localhost, using local backend');
+    return 'http://localhost:5000/api';
+  }
+
+  // Default fallback: production backend (for any other production environment)
+  console.warn('[bugService] VITE_API_BASE_URL not set, defaulting to production backend');
   return 'https://bug-tracker-backend-na6z.onrender.com/api';
 };
 

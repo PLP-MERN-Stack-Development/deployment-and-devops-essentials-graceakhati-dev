@@ -25,45 +25,10 @@ app.use(helmet({
 
 // CORS middleware - Allow requests from React frontend
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // In development, allow all origins
-    if (process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    
-    // In production, only allow specific frontend URL
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      // Explicit Vercel frontend domain
-      'https://bug-tracker-frontend-hazel-three.vercel.app',
-      // Vercel deployment URLs (wildcard pattern for other Vercel deployments)
-      /^https:\/\/.*\.vercel\.app$/,
-      // Fallback for localhost in case FRONTEND_URL is not set
-      'http://localhost:3000',
-      'http://localhost:3001'
-    ].filter(Boolean); // Remove undefined values
-    
-    // Check if origin matches any allowed origin (including regex patterns)
-    const isAllowed = allowedOrigins.length === 0 || 
-      allowedOrigins.some(allowed => {
-        if (typeof allowed === 'string') {
-          return allowed === origin;
-        }
-        if (allowed instanceof RegExp) {
-          return allowed.test(origin);
-        }
-        return false;
-      });
-    
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
-    }
-  },
+  origin: [
+    'https://bug-tracker-frontend-hazel-three.vercel.app',
+    'http://localhost:3000'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

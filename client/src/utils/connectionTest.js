@@ -6,25 +6,40 @@
  * @returns {string} The API base URL (with /api suffix)
  */
 export const getApiBaseUrl = () => {
-  // Check if we're running on Vercel (production)
+  // Get current hostname for detection
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'unknown';
+  const href = typeof window !== 'undefined' ? window.location.href : 'unknown';
+
+  // Check if we're running on Vercel (production) - check multiple patterns
   const isVercel = typeof window !== 'undefined' && 
-    (window.location.hostname.includes('vercel.app') || 
-     window.location.hostname.includes('vercel.com'));
+    (hostname.includes('vercel.app') || 
+     hostname.includes('vercel.com') ||
+     href.includes('vercel.app') ||
+     href.includes('vercel.com'));
 
   // Check if we're running on localhost (development)
   const isLocalhost = typeof window !== 'undefined' && 
-    (window.location.hostname === 'localhost' || 
-     window.location.hostname === '127.0.0.1' ||
-     window.location.hostname === '');
+    (hostname === 'localhost' || 
+     hostname === '127.0.0.1' ||
+     hostname === '' ||
+     hostname.startsWith('192.168.') ||
+     hostname.startsWith('10.0.'));
 
   // Vite environment variable (primary) - checked first
+  // BUT: If env var is localhost and we're on Vercel, ignore it and use production
   if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
     const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    
+    // If env var points to localhost but we're on Vercel, ignore it
+    if (baseUrl.includes('localhost') && isVercel) {
+      return 'https://bug-tracker-backend-na6z.onrender.com/api';
+    }
+    
     // Ensure we have /api suffix
     return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
   }
 
-  // If on Vercel, always use production backend
+  // If on Vercel, ALWAYS use production backend (no exceptions)
   if (isVercel) {
     return 'https://bug-tracker-backend-na6z.onrender.com/api';
   }
